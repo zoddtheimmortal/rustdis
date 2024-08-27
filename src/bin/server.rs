@@ -4,8 +4,8 @@ use tokio::net::TcpListener;
 pub async fn main() -> Result<(), std::io::Error> {
     let listener = TcpListener::bind("127.0.0.1:8081").await?;
     loop {
-        let (mut socket, _) = listener.accept().await?;
-        println!("Connection Accepted {:?}", socket);
+        let (socket, _) = listener.accept().await?;
+        println!("Connection Accepted:  {:?}", socket);
     }
-    Ok(())
+    // Ok(())
 }
