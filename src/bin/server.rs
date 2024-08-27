@@ -1,11 +1,17 @@
-use tokio::net::TcpListener;
+use bytes::BytesMut;
+use tokio::{io::AsyncReadExt, net::TcpListener};
 
 #[tokio::main]
 pub async fn main() -> Result<(), std::io::Error> {
     let listener = TcpListener::bind("127.0.0.1:8081").await?;
     loop {
-        let (socket, _) = listener.accept().await?;
+        let (mut socket, _) = listener.accept().await?;
         println!("Connection Accepted:  {:?}", socket);
+
+        let mut buff = BytesMut::with_capacity(1024);
+        socket.read_buf(&mut buff).await?;
+
+        print!("Received: {:?}\n", buff);
     }
     // Ok(())
 }
