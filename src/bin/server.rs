@@ -1,5 +1,3 @@
-use std::result;
-
 use bytes::BytesMut;
 use rustdis::{helper::buffer_to_array, Command, Db};
 use tokio::{
