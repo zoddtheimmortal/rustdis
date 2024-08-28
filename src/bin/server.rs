@@ -1,3 +1,5 @@
+use std::result;
+
 use bytes::BytesMut;
 use rustdis::{helper::buffer_to_array, Command, Db};
 use tokio::{
@@ -31,7 +33,19 @@ async fn process_query(
     db: &mut Db,
 ) -> std::io::Result<()> {
     match command {
-        Command::Get => Ok(()),
+        Command::Get => {
+            let result = db.read(&attrs);
+            match result {
+                Ok(result) => {
+                    socket.write_all(&result).await?;
+                }
+                Err(_err) => {
+                    println!("no key found: {}", _err);
+                    let _ = socket.write_all(b"").await;
+                }
+            }
+            Ok(())
+        }
         Command::Set => {
             let resp = db.write(&attrs);
 

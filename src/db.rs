@@ -24,4 +24,15 @@ impl Db {
             None => Ok("Ok"),
         }
     }
+
+    pub fn read(&mut self, arr: &[String]) -> Result<&Bytes, &'static str> {
+        let key = &arr[1];
+        let query_res = self.entries.get(key);
+
+        if let Some(value) = query_res {
+            return Ok(value);
+        } else {
+            return Err("key not found");
+        }
+    }
 }
