@@ -1,5 +1,5 @@
 use bytes::BytesMut;
-use rustdis::helper::buffer_to_array;
+use rustdis::{helper::buffer_to_array, Command};
 use tokio::{io::AsyncReadExt, net::TcpListener};
 
 #[tokio::main]
@@ -16,6 +16,8 @@ pub async fn main() -> Result<(), std::io::Error> {
 
         let attr = buffer_to_array(&mut buff);
         println!("Split array: {:?}", attr);
+
+        let command = Command::get_command(&attr[0]);
     }
     // Ok(())
 }
