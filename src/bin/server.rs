@@ -1,4 +1,5 @@
 use bytes::BytesMut;
+use rustdis::helper::buffer_to_array;
 use tokio::{io::AsyncReadExt, net::TcpListener};
 
 #[tokio::main]
@@ -12,6 +13,9 @@ pub async fn main() -> Result<(), std::io::Error> {
         socket.read_buf(&mut buff).await?;
 
         print!("Received: {:?}\n", buff);
+
+        let attr = buffer_to_array(&mut buff);
+        println!("Split array: {:?}", attr);
     }
     // Ok(())
 }
