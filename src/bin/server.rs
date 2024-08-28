@@ -1,27 +1,41 @@
 use bytes::BytesMut;
-use rustdis::{helper::buffer_to_array, Command, Db};
+use rustdis::{
+    helper::buffer_to_array,
+    listener::{self, Listener},
+    Command, Db,
+};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
+    signal,
+    sync::{broadcast, mpsc},
 };
 
 #[tokio::main]
 pub async fn main() -> Result<(), std::io::Error> {
-    let mut db = Db::new();
     let listener = TcpListener::bind("127.0.0.1:8081").await?;
-    loop {
-        let (mut socket, _) = listener.accept().await?;
-        println!("connection accepted:  {:?}", socket);
+    let shutdown = signal::ctrl_c();
+    let (notify_shutdown, _) = broadcast::channel(1);
+    let (shutdown_complete_tx, shutdown_complete_rx) = mpsc::channel(1);
 
-        let mut buff = BytesMut::with_capacity(1024);
-        socket.read_buf(&mut buff).await?;
+    let mut listener = Listener::new(
+        listener,
+        notify_shutdown,
+        shutdown_complete_tx,
+        shutdown_complete_rx,
+    );
 
-        let attr = buffer_to_array(&mut buff);
-        let command = Command::get_command(&attr[0]);
-
-        process_query(command, attr, &mut socket, &mut db).await?;
+    tokio::select! {
+        res = server::run(&mut listener) => {
+            if let Err(_err)=res{
+                println!("Failed to accept connection")
+            }
+        }
+        _ = shutdown =>{
+            println!("Inside shutdown loop")
+        }
     }
-    // Ok(())
+    Ok(())
 }
 
 async fn process_query(
